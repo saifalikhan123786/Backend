@@ -1,7 +1,8 @@
 import {asyncHandlers} from "../utils/asyncHandlers.js";
 import {ApiError} from "../utils/ApiError.js";
 import {User} from "../models/user.models.js";
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {uploadOnCloudinary} from "../utils/cloudinary.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandlers(async (req,res)=>{
 
@@ -54,7 +55,7 @@ const registerUser = asyncHandlers(async (req,res)=>{
 
     // Create the User Object And Enter into database
 
-    User.create({
+  const user=await  User.create({
         fullName,
         avatar:avatar.url,
         coverImage:coverImage?.url || "",
@@ -63,6 +64,17 @@ const registerUser = asyncHandlers(async (req,res)=>{
         username:username.toLowerCase
 
     })
+
+   const createdUser= User.findById(user._id).select("-password -refreshToken")
+
+   if(!createdUser){
+    throw new ApiError(500,"Something went wrong while registering the user")
+   }
+
+   // Return Response
+   return res.status(201).json(
+    new ApiResponse(200,createdUser, "User registered successfully")
+   ) 
 
 })
 
