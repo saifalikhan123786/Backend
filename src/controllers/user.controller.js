@@ -10,16 +10,12 @@ const registerUser = asyncHandlers(async (req,res)=>{
 
     const{fullName,email,username,password} =req.body
     console.log("email:",email);
-
-    res.status(200).json({
-        message:"success"
-    });
     
 
     // Check Validation 
 
     if (
-        [username,FullName,email,password].some((field)=>
+        [username,fullName,email,password].some((field)=>
            field?.trim() === "" )
     ){
         throw new ApiError(400,"All fields are required")
@@ -27,7 +23,7 @@ const registerUser = asyncHandlers(async (req,res)=>{
 
     // Chech if the User is already exit
 
-    const exitedUser=User.findOne({
+    const exitedUser= await User.findOne({
         $or:[{username},{email}]
     })
 
@@ -61,22 +57,23 @@ const registerUser = asyncHandlers(async (req,res)=>{
         coverImage:coverImage?.url || "",
         email,
         password,
-        username:username.toLowerCase
+        username:username.toLowerCase()
 
     })
 
-   const createdUser= User.findById(user._id).select("-password -refreshToken")
+   const createdUser=await  User.findById(user._id).select("-password -refreshToken")
 
    if(!createdUser){
     throw new ApiError(500,"Something went wrong while registering the user")
    }
 
    // Return Response
-   return res.status(201).json(
+    return res.status(201).json(
     new ApiResponse(200,createdUser, "User registered successfully")
-   ) 
+   )
 
 })
+
 
 
 export {registerUser}
